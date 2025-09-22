@@ -109,34 +109,108 @@ def notation_to_pos(move):
     return 8-int(move[1]), col_map.index(move[0])
 
 def pos_to_notation(pos):
-    row,col = pos
+    row, col = pos
     col_map = "abcdefgh"
     return f"{col_map[col]}{8-row}"
+
+def is_in_board(r, c):
+    return 0 <= r < 8 and 0 <= c < 8
+
+def pawn_moves(r, c, is_white):
+    moves = []
+    direction = -1 if is_white else 1
+    start_row = 6 if is_white else 1
+    # move forward
+    if is_in_board(r + direction, c) and board[r + direction][c] == ".":
+        moves.append((r + direction, c))
+        if r == start_row and board[r + 2*direction][c] == ".":
+            moves.append((r + 2*direction, c))
+    # capture
+    for dc in [-1, 1]:
+        nr, nc = r + direction, c + dc
+        if is_in_board(nr, nc):
+            target = board[nr][nc]
+            if target != "." and target.isupper() != is_white:
+                moves.append((nr, nc))
+    return moves
+
+def knight_moves(r, c, is_white):
+    moves = []
+    for dr, dc in [(-2,-1), (-2,1), (-1,-2), (-1,2), (1,-2), (1,2), (2,-1), (2,1)]:
+        nr, nc = r + dr, c + dc
+        if is_in_board(nr, nc):
+            target = board[nr][nc]
+            if target == "." or target.isupper() != is_white:
+                moves.append((nr, nc))
+    return moves
+
+def straight_moves(r, c, is_white, directions):
+    moves = []
+    for dr, dc in directions:
+        nr, nc = r + dr, c + dc
+        while is_in_board(nr, nc):
+            target = board[nr][nc]
+            if target == ".":
+                moves.append((nr, nc))
+            else:
+                if target.isupper() != is_white:
+                    moves.append((nr, nc))
+                break
+            nr += dr
+            nc += dc
+    return moves
+
+def get_piece_moves(r, c):
+    piece = board[r][c]
+    is_white = piece.isupper()
+    piece = piece.lower()
+    if piece == "p":
+        return pawn_moves(r, c, is_white)
+    elif piece == "n":
+        return knight_moves(r, c, is_white)
+    elif piece == "b":
+        return straight_moves(r, c, is_white, [(-1,-1), (-1,1), (1,-1), (1,1)])
+    elif piece == "r":
+        return straight_moves(r, c, is_white, [(-1,0), (1,0), (0,-1), (0,1)])
+    elif piece == "q":
+        return straight_moves(r, c, is_white, [(-1,0), (1,0), (0,-1), (0,1), (-1,-1), (-1,1), (1,-1), (1,1)])
+    elif piece == "k":
+        moves = []
+        for dr in [-1,0,1]:
+            for dc in [-1,0,1]:
+                if dr == 0 and dc == 0:
+                    continue
+                nr, nc = r+dr, c+dc
+                if is_in_board(nr,nc):
+                    target = board[nr][nc]
+                    if target == "." or target.isupper() != is_white:
+                        moves.append((nr,nc))
+        return moves
+    return []
 
 def get_moves(is_white):
     moves = []
     for r in range(8):
         for c in range(8):
             piece = board[r][c]
-            if piece == ".": 
+            if piece == ".":
                 continue
-            if is_white and piece.isupper() or (not is_white and piece.islower()):
-                for rr in range(8):
-                    for cc in range(8):
-                        if (rr,cc)!=(r,c) and board[rr][cc]=="." or (is_white and board[rr][cc].islower()) or (not is_white and board[rr][cc].isupper()):
-                            moves.append(((r,c),(rr,cc)))
+            if (is_white and piece.isupper()) or (not is_white and piece.islower()):
+                for end in get_piece_moves(r, c):
+                    moves.append(((r,c), end))
     return moves
 
-def make_move(start,end):
-    r1,c1=start; r2,c2=end
-    board[r2][c2]=board[r1][c1]
-    board[r1][c1]="."
+def make_move(start, end):
+    r1,c1 = start
+    r2,c2 = end
+    board[r2][c2] = board[r1][c1]
+    board[r1][c1] = "."
 
 def game():
-    white_turn=True
+    white_turn = True
     print_board()
     while True:
-        flat=sum(board,[])
+        flat = sum(board, [])
         if "K" not in flat:
             print("Black wins! King captured.")
             break
@@ -145,22 +219,31 @@ def game():
             break
 
         if white_turn:
-            move=input("Your move (e.g., e2 e4): ").split()
+            move = input("Your move (e.g., e2 e4): ").split()
+            if len(move) != 2:
+                print("Invalid input, try again.")
+                continue
             try:
-                start=notation_to_pos(move[0]); end=notation_to_pos(move[1])
-                make_move(start,end)
+                start = notation_to_pos(move[0])
+                end = notation_to_pos(move[1])
+                if end not in get_piece_moves(*start):
+                    print("Illegal move, try again.")
+                    continue
+                make_move(start, end)
             except:
-                print("Invalid input, try again."); continue
+                print("Invalid move, try again.")
+                continue
         else:
-            moves=get_moves(False)
-            if not moves: 
-                print("Stalemate!"); break
-            start,end=random.choice(moves)
-            make_move(start,end)
+            moves = get_moves(False)
+            if not moves:
+                print("Stalemate!")
+                break
+            start, end = random.choice(moves)
+            make_move(start, end)
             print(f"AI plays {pos_to_notation(start)} {pos_to_notation(end)}")
 
         print_board()
-        white_turn=not white_turn
+        white_turn = not white_turn
 
 game()
 
@@ -169,15 +252,17 @@ game()
 
 **chess board** 
 
-<img width="258" height="214" alt="image" src="https://github.com/user-attachments/assets/9dc95c5b-497d-4d75-89d5-7eb1ff5d7a56" />
+<img width="255" height="221" alt="image" src="https://github.com/user-attachments/assets/47e71a72-0634-4517-b7d5-84da3096ceb7" />
+
 
 Moving from our side 
 
-<img width="397" height="237" alt="image" src="https://github.com/user-attachments/assets/c9df8860-b997-409a-8ba0-e089f1fab6a6" />
+<img width="322" height="241" alt="image" src="https://github.com/user-attachments/assets/76412621-8a1e-4139-9e07-336f9581b18e" />
+
 
 Ai moves
 
-<img width="277" height="250" alt="image" src="https://github.com/user-attachments/assets/181860fa-5fcd-4d08-8a6d-a54f406d29eb" />
+<img width="259" height="246" alt="image" src="https://github.com/user-attachments/assets/2ce72258-5fff-444e-b877-ce46a9d3049c" />
 
 
 
