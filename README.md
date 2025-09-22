@@ -48,6 +48,7 @@ Define evaluation function (to measure how good a board position is).
 Set search depth (how many moves ahead to look).
 
 **Step 2 :** Game Loop (repeat until game ends)
+
 a. Sense/Perceive:
 
 Observe current board state.
