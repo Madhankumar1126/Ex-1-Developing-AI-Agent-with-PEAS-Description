@@ -170,11 +170,11 @@ game()
 
 <img width="258" height="214" alt="image" src="https://github.com/user-attachments/assets/9dc95c5b-497d-4d75-89d5-7eb1ff5d7a56" />
 
-**Moving from our side **
+Moving from our side 
 
 <img width="397" height="237" alt="image" src="https://github.com/user-attachments/assets/c9df8860-b997-409a-8ba0-e089f1fab6a6" />
 
-**Ai moves **
+Ai moves
 
 <img width="277" height="250" alt="image" src="https://github.com/user-attachments/assets/181860fa-5fcd-4d08-8a6d-a54f406d29eb" />
 
@@ -182,4 +182,4 @@ game()
 
 ### Result:
 
-thus , the program for Developing-AI-Agent-with-PEAS- chess board was implemented and executed successfully.
+Thus , the program for Developing-AI-Agent-with-PEAS- chess board was implemented and executed successfully.
